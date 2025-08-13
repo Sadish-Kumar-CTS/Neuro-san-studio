@@ -3,6 +3,8 @@ kind: Service
 metadata:
   name: neuro-san-studio-service
   namespace: argocd
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: internet-facing
   labels:
     app: neuro-san-studio
 spec:
@@ -17,4 +19,4 @@ spec:
     port: 30011
     targetPort: 30011
     protocol: TCP
-  type: ClusterIP
+  type: LoadBalancer
