@@ -42,15 +42,14 @@ spec:
           limits:
             memory: "1Gi"
             cpu: "500m"
+
         livenessProbe:
-          httpGet:
-            path: /health
+          tcpSocket:
             port: 8080
           initialDelaySeconds: 30
           periodSeconds: 10
         readinessProbe:
-          httpGet:
-            path: /ready
+          tcpSocket:
             port: 8080
           initialDelaySeconds: 5
           periodSeconds: 5
