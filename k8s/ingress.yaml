@@ -4,7 +4,7 @@ metadata:
   name: neuro-san-studio-ingress
   namespace: argocd
   annotations:
-    external-dns.alpha.kubernetes.io/hostname:neuro-san.dev.evolution.ml
+    external-dns.alpha.kubernetes.io/hostname: neuro-san.dev.evolution.ml
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}]'
