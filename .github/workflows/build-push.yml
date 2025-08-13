@@ -12,20 +12,19 @@
 # manual as the custom ui build is a manual process and not 
 # run frequently.
 
-name: Build and Push Docker Image to ECR and promote to manifest repo
+name: Build and Push Docker Image to ECR
 
 on:
   push:
     branches:
       - main
   release:
-    types: [published]  # Triggers when a GitHub Release is published
-  workflow_dispatch:  # Allow manual runs if needed
+    types: [published]
+  workflow_dispatch:
 
 jobs:
   build-and-push:
-    # don't run this job in sync'd clones
-    if: github.repository == 'cognizant-ai-lab/neuro-san-studio'
+    if: github.repository == 'Sadish-Kumar-CTS/Neuro-san-studio'
     runs-on: ubuntu-latest
     outputs:
       image_tag: ${{ steps.set-vars.outputs.image_tag }}
@@ -66,34 +65,27 @@ jobs:
           context: .
           file: ./deploy/Dockerfile
           push: true
-          tags: ${{ vars.ECR_REGISTRY }}/${{ vars.ECR_REPOSITORY }}:${{ steps.set-vars.outputs.image_tag }}
+          tags: 876092575456.dkr.ecr.us-west-2.amazonaws.com/neurosan_cognizant_sso:${{ steps.set-vars.outputs.image_tag }}
 
-  promote-to-manifest:
+  update-k8s-manifest:
     needs: build-and-push
     runs-on: ubuntu-latest
     permissions:
-      contents: write  ## to allow committing changes
+      contents: write
     steps:
-      - name: Checkout manifest repo
+      - name: Checkout code
         uses: actions/checkout@v4
         with:
-          repository: cognizant-ai-lab/manifest
-          token: ${{ secrets.READ_WRITE_PAT_FOR_DEPLOYMENT }}
-          ref: main 
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Update image tag in values.yaml
+      - name: Update image tag in kustomization.yaml
         run: |
-          echo "image_tag is ${{ needs.build-and-push.outputs.image_tag }}"
-          echo "target_enviroment is ${{ needs.build-and-push.outputs.target_environment }}"
-
-          python neuro-san/utility_scripts/deploy_to_cluster.py \
-          --file-path "neuro-san/values-${{ needs.build-and-push.outputs.target_environment }}.yaml" \
-          --neuro-san-studio-tag "${{ needs.build-and-push.outputs.image_tag }}"
+          sed -i "s|newTag: .*|newTag: ${{ needs.build-and-push.outputs.image_tag }}|" k8s/kustomization.yaml
 
       - name: Commit and push changes
         run: |
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
-          git add "neuro-san/values-${{ needs.build-and-push.outputs.target_environment }}.yaml"
-          git commit -m "Update image tag to ${{ github.sha }}"
+          git add k8s/kustomization.yaml
+          git commit -m "Update image tag to ${{ needs.build-and-push.outputs.image_tag }}" || exit 0
           git push

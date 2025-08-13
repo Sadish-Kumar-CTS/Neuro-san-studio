@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: neuro-san-studio-service
+  namespace: argocd
+  labels:
+    app: neuro-san-studio
+spec:
+  selector:
+    app: neuro-san-studio
+  ports:
+  - name: http
+    port: 80
+    targetPort: 8080
+    protocol: TCP
+  - name: grpc
+    port: 30011
+    targetPort: 30011
+    protocol: TCP
+  type: ClusterIP

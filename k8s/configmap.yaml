@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: neuro-san-config
+  namespace: argocd
+data:
+  AGENT_SERVICE_LOG_LEVEL: "INFO"
+  AGENT_MAX_CONCURRENT_REQUESTS: "10"
+  AGENT_REQUEST_LIMIT: "1000000"
+  AGENT_SERVER_NAME: "neuro-san.Agent"
+  AGENT_SERVER_NAME_FOR_LOGS: "Agent Server"

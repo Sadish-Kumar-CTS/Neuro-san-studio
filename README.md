@@ -376,6 +376,21 @@ and coded tools.
 explores Neuro SAN's architecture, configuration model, adaptive communication protocol (AAOSA),
 and how it enables secure, extensible agent collaboration without hardcoded logic.
 
+## Kubernetes Deployment
+
+For production deployment on Kubernetes with ArgoCD:
+
+```bash
+# Build and push to ECR
+./build-and-push-ecr.sh
+
+# Deploy to Kubernetes
+cd k8s
+./deploy.sh
+```
+
+See [k8s/README.md](k8s/README.md) for detailed deployment instructions.
+
 ## More details
 
 For more information, check out the [Cognizant AI Lab Neuro SAN landing page](https://decisionai.ml/neuro-san).
