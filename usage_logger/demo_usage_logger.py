@@ -14,24 +14,46 @@ from typing import Any
 from typing import Dict
 import boto3
 from botocore.exceptions import ClientError
-
 from neuro_san.interfaces.usage_logger import UsageLogger
 
 
 class DemoUsageLogger(UsageLogger):
     """
-    Implementation of the UsageLogger interface that logs usage stats to DynamoDB.
+      Implementation of the UsageLogger interface that merely spits out
+      usage stats to the logger.
     """
+    async def log_usage(self, token_dict: Dict[str, Any], request_metadata: Dict[str, Any]):
+        """
+          Logs the token usage for external capture.
+ 
+        :param token_dict: A dictionary that describes overall token usage for a completed request.
+ 
+                For each class of LLM (more or less equivalent to an LLM provider), there will
+                be one key whose value is a dictionary with some other keys:
+ 
+                Relevant keys include:
+                    "completion_tokens" - Integer number of tokens generated in response to LLM input
+                    "prompt_tokens" - Integer number of tokens that provide input to an LLM
+                    "time_taken_in_seconds" - Float describing the total wall-clock time taken for the request.
+                    "total_cost" -  An estimation of the cost in USD of the request.
+                                    This number is to be taken with a grain of salt, as these estimations
+                                    can come from model costs from libraries instead of directly from
+                                    providers.
+                    "total_tokens" - Total tokens used for the request.
+ 
+                More keys can appear, but should not be counted on.
+                The ones listed above contain potentially salient information for usage logging purposes.
+ 
+        :param request_metadata: A dictionary of filtered request metadata whose keys contain
+                identifying information for the usage log.
+        """
+        print("Logging usage to DynamoDB...")
+        print(f"Token usage: {token_dict}")
 
-    def __init__(self):
-        self.dynamodb = boto3.resource('dynamodb')
+        self.dynamodb = boto3.resource('dynamodb', region_name='us-west-2')
         self.table_name = 'usage-logs'  # Change to your table name
         self.table = self.dynamodb.Table(self.table_name)
 
-    async def log_usage(self, token_dict: Dict[str, Any], request_metadata: Dict[str, Any]):
-        """
-        Logs the token usage to DynamoDB.
-        """
         try:
             # Extract request_id and user_id from metadata
             request_id = request_metadata.get('request_id', 'unknown')
