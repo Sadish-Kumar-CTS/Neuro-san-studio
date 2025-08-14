@@ -35,6 +35,21 @@ spec:
             secretKeyRef:
               name: neuro-san-secrets
               key: openai-api-key
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: neuro-san-secrets
+              key: access_key_id
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: neuro-san-secrets
+              key: secret_access_key
+        - name: AWS_REGION
+          valueFrom:
+            secretKeyRef:
+              name: neuro-san-secrets
+              key: region
         - name: AGENT_USAGE_LOGGER_METADATA
           value: "user_id request_id"
         - name: AGENT_USAGE_LOGGER
