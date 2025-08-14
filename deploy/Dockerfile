@@ -92,6 +92,7 @@ COPY --from=builder /install /usr/local
 # Note: The registries directory where agent definitions live is mandatory
 #       The coded_tools directory where agent code lives is optional
 COPY ./registries ${APP_SOURCE}/registries
+COPY ./usage_logger ${APP_SOURCE}/usage_logger
 COPY ./coded_tool[s] ${APP_SOURCE}/coded_tools
 COPY ./deploy/entrypoint.sh ${APP_SOURCE}/deploy/entrypoint.sh
 COPY ./deploy/logging.json ${APP_SOURCE}/deploy/logging.json
