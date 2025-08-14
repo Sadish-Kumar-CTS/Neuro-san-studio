@@ -38,7 +38,7 @@ spec:
         - name: AGENT_USAGE_LOGGER_METADATA
           value: "user_id request_id"
         - name: AGENT_USAGE_LOGGER
-          value: "neuro_san.service.usage.debug_usage_logger.DebugUsageLogger"
+          value: "usage_logger.demo_usage_logger.DemoUsageLogger"
         - name: PYTHONPATH
           value: "/usr/local/neuro-san/myapp"
         resources:
