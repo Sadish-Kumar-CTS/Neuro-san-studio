@@ -42,10 +42,18 @@ class DemoUsageLogger(UsageLogger):
             
             # Prepare item for DynamoDB
             item = {
-                'requestid': request_id,  # PK
-                'userid_requestid': sort_key,  # SK
+                'PK': user_id,  # PK
+                'SK': f"{user_id}#{request_id}",  # SK
                 'token_usage': json.dumps(token_dict),
-                'request_metadata': json.dumps(request_metadata)
+                'request_metadata': json.dumps(request_metadata),
+                'user_id': user_id,
+            'total_tokens': token_dict.get('total_tokens', 0),
+            'prompt_tokens': token_dict.get('prompt_tokens', 0),
+            'completion_tokens': token_dict.get('completion_tokens', 0),
+            'successful_requests': token_dict.get('successful_requests', 0),
+            'total_cost': str(token_dict.get('total_cost', 0.0)),  # Decimal as string
+            'time_taken_in_seconds': str(token_dict.get('time_taken_in_seconds', 0.0)),
+            'caveats': token_dict.get('caveats', [])
             }
             
             # Write to DynamoDB
