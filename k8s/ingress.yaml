@@ -15,7 +15,7 @@ metadata:
     alb.ingress.kubernetes.io/unhealthy-threshold-count: '2'
 spec:
   rules:
-  - host: neuro-san-log.dev
+  - host: neuro-san.dev.evolution.ml
     http:
       paths:
       - path: /
