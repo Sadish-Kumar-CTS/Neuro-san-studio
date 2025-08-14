@@ -35,19 +35,8 @@ spec:
             secretKeyRef:
               name: neuro-san-secrets
               key: openai-api-key
-        - name: AWS_ACCESS_KEY_ID
-          valueFrom:
-            secretKeyRef:
-              name: neuro-san-secrets
-              key: aws-access-key-id
-        - name: AWS_SECRET_ACCESS_KEY
-          valueFrom:
-            secretKeyRef:
-              name: neuro-san-secrets
-              key: aws-secret-access-key
-        - name: AWS_DEFAULT_REGION
-          value: "us-west-2"
-
+        - name: PYTHONPATH
+          value: "/usr/local/neuro-san/myapp"
         resources:
           requests:
             memory: "512Mi"
