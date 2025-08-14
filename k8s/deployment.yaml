@@ -35,6 +35,10 @@ spec:
             secretKeyRef:
               name: neuro-san-secrets
               key: openai-api-key
+        - name: AGENT_USAGE_LOGGER
+          value: "usage_logger.demo_usage_logger.DemoUsageLogger"
+        - name: AGENT_USAGE_LOGGER_METADATA
+          value: "user_id request_id"
         resources:
           requests:
             memory: "512Mi"
