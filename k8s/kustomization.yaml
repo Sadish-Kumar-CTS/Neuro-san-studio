@@ -9,4 +9,4 @@ resources:
 
 images:
 - name: 876092575456.dkr.ecr.us-west-2.amazonaws.com/neurosan_cognizant_sso
-  newTag: a9604a0
+  newTag: 37049b9
