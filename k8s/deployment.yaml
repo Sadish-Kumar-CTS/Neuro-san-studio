@@ -39,17 +39,17 @@ spec:
           valueFrom:
             secretKeyRef:
               name: neuro-san-secrets
-              key: access_key_id
+              key: aws-access-key-id
         - name: AWS_SECRET_ACCESS_KEY
           valueFrom:
             secretKeyRef:
               name: neuro-san-secrets
-              key: secret_access_key
-        - name: AWS_REGION
+              key: aws-secret-access-key
+        - name: AWS_DEFAULT_REGION
           valueFrom:
             secretKeyRef:
               name: neuro-san-secrets
-              key: region
+              key: aws-region
         - name: AGENT_USAGE_LOGGER_METADATA
           value: "user_id request_id"
         - name: AGENT_USAGE_LOGGER
