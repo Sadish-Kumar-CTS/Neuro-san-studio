@@ -47,8 +47,9 @@ class DemoUsageLogger(UsageLogger):
         :param request_metadata: A dictionary of filtered request metadata whose keys contain
                 identifying information for the usage log.
         """
-        print("Logging usage to DynamoDB...")
+        print("=== DemoUsageLogger.log_usage called ===")
         print(f"Token usage: {token_dict}")
+        print(f"Request metadata: {request_metadata}")
 
         try:
             # Use environment variables for AWS credentials
@@ -91,10 +92,15 @@ class DemoUsageLogger(UsageLogger):
                 'request_metadata': json.dumps(request_metadata)
             }
             
-            # Write to DynamoDB
-            table.put_item(Item=item)
+            # Debug: Print item before writing
+            print(f"Writing item to DynamoDB: {item}")
             
+            # Write to DynamoDB
+            response = table.put_item(Item=item)
+            
+            print(f"DynamoDB response: {response}")
             print(f"Successfully logged usage for request {request_id}")
+            print("=== End DemoUsageLogger.log_usage ===")
             
         except ClientError as e:
             print(f"Error logging to DynamoDB: {e}")
