@@ -50,36 +50,49 @@ class DemoUsageLogger(UsageLogger):
         print("Logging usage to DynamoDB...")
         print(f"Token usage: {token_dict}")
 
-        self.dynamodb = boto3.resource('dynamodb', region_name='us-west-2')
-        self.table_name = 'usage-logs'  # Change to your table name
-        self.table = self.dynamodb.Table(self.table_name)
-
         try:
+            # Use environment variables for AWS credentials
+            dynamodb = boto3.resource('dynamodb')
+            table_name = 'usage-logs'  # Change to your table name
+            table = dynamodb.Table(table_name)
+            
             # Extract request_id and user_id from metadata
             request_id = request_metadata.get('request_id', 'unknown')
             user_id = request_metadata.get('user_id', 'unknown')
             
-            # Create composite sort key
-            sort_key = f"{user_id}#{request_id}"
+            # Extract token data from nested structure
+            total_tokens = 0
+            prompt_tokens = 0
+            completion_tokens = 0
+            total_cost = 0.0
+            time_taken = 0.0
+            
+            # token_dict often has nested provider data
+            for provider, data in token_dict.items():
+                if isinstance(data, dict):
+                    total_tokens += data.get('total_tokens', 0)
+                    prompt_tokens += data.get('prompt_tokens', 0)
+                    completion_tokens += data.get('completion_tokens', 0)
+                    total_cost += data.get('total_cost', 0.0)
+                    time_taken += data.get('time_taken_in_seconds', 0.0)
             
             # Prepare item for DynamoDB
             item = {
-                'PK': user_id,  # PK
-                'SK': f"{user_id}#{request_id}",  # SK
-                'token_usage': json.dumps(token_dict),
-                'request_metadata': json.dumps(request_metadata),
+                'PK': user_id,
+                'SK': f"{user_id}#{request_id}",
+                'request_id': request_id,
                 'user_id': user_id,
-            'total_tokens': token_dict.get('total_tokens', 0),
-            'prompt_tokens': token_dict.get('prompt_tokens', 0),
-            'completion_tokens': token_dict.get('completion_tokens', 0),
-            'successful_requests': token_dict.get('successful_requests', 0),
-            'total_cost': str(token_dict.get('total_cost', 0.0)),  # Decimal as string
-            'time_taken_in_seconds': str(token_dict.get('time_taken_in_seconds', 0.0)),
-            'caveats': token_dict.get('caveats', [])
+                'total_tokens': total_tokens,
+                'prompt_tokens': prompt_tokens,
+                'completion_tokens': completion_tokens,
+                'total_cost': str(total_cost),
+                'time_taken_in_seconds': str(time_taken),
+                'token_usage': json.dumps(token_dict),
+                'request_metadata': json.dumps(request_metadata)
             }
             
             # Write to DynamoDB
-            self.table.put_item(Item=item)
+            table.put_item(Item=item)
             
             print(f"Successfully logged usage for request {request_id}")
             
