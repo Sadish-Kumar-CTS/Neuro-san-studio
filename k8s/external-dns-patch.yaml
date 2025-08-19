@@ -1,0 +1,21 @@
+spec:
+  template:
+    spec:
+      containers:
+      - name: external-dns
+        env:
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: neuro-san-secrets
+              key: aws-access-key-id
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: neuro-san-secrets
+              key: aws-secret-access-key
+        - name: AWS_REGION
+          valueFrom:
+            secretKeyRef:
+              name: neuro-san-secrets
+              key: aws-region

@@ -1,0 +1,15 @@
+spec:
+  template:
+    spec:
+      containers:
+      - name: external-dns
+        args:
+        - --log-level=debug
+        - --log-format=text
+        - --interval=1m
+        - --source=service
+        - --source=ingress
+        - --policy=upsert-only
+        - --registry=txt
+        - --provider=aws
+        - --namespace=
