@@ -53,7 +53,9 @@ class DemoUsageLogger(UsageLogger):
 
         try:
             # Use environment variables for AWS credentials
-            dynamodb = boto3.resource('dynamodb')
+            import os
+            region = os.environ.get('AWS_REGION', 'us-west-2')
+            dynamodb = boto3.resource('dynamodb', region_name=region)
             table_name = 'usage-logs'  # Change to your table name
             table = dynamodb.Table(table_name)
             
