@@ -166,3 +166,7 @@ class PostgresUsageLogger(UsageLogger):
             raise
         finally:
             session.close()
+
+
+# Alias for backward compatibility
+DemoUsageLogger = PostgresUsageLogger
