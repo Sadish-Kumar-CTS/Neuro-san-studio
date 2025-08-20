@@ -131,6 +131,7 @@ class PostgresUsageLogger(UsageLogger):
                     email=request_metadata.get("email")
                 )
                 session.add(user)
+                session.flush()  # Ensure user is created before request insertion
 
             # Persist request
             request = Request(
