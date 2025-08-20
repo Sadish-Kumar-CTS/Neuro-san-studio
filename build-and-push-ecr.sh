@@ -47,3 +47,5 @@ sed -i "s|newTag: .*|newTag: ${IMAGE_TAG}|" k8s/kustomization.yaml
 
 echo "🎉 Build and push completed!"
 echo "💡 To deploy: cd k8s && ./deploy.sh"
+
+# Force rebuild for psycopg2-binary dependency
