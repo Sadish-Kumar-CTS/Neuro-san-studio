@@ -109,6 +109,15 @@ class PostgresUsageLogger(UsageLogger):
             raise RuntimeError("Missing required DB environment variables for PostgresUsageLogger")
 
         return f"postgresql+psycopg2://{db_user}:{db_pass}@{db_host}:{db_port}/{db_name}"
+    
+    def _normalize_usage(self, token_dict: Dict[str, Any]) -> Dict[str, Any]:
+        """Unwrap token_dict if nested under a provider key (like 'all')."""
+        if not token_dict:
+            return {}
+        if isinstance(next(iter(token_dict.values())), dict):
+            _, stats = next(iter(token_dict.items()))
+            return stats
+        return token_dict
 
     async def log_usage(self, token_dict: Dict[str, Any], request_metadata: Dict[str, Any]) -> None:
         """
@@ -119,6 +128,7 @@ class PostgresUsageLogger(UsageLogger):
         """
         session: Session = self.SessionLocal()
         try:
+            token_dict = self._normalize_usage(token_dict)
             request_id = request_metadata.get("request_id")
             user_id = request_metadata.get("user_id", "unknown")
 
