@@ -50,6 +50,31 @@ spec:
             secretKeyRef:
               name: neuro-san-secrets
               key: aws-region
+        - name: USAGE_DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: neuro-san-secrets
+              key: usage-db-user
+        - name: USAGE_DB_PASS
+          valueFrom:
+            secretKeyRef:
+              name: neuro-san-secrets
+              key: usage-db-pass
+        - name: USAGE_DB_HOST
+          valueFrom:
+            secretKeyRef:
+              name: neuro-san-secrets
+              key: usage-db-host
+        - name: USAGE_DB_PORT
+          valueFrom:
+            secretKeyRef:
+              name: neuro-san-secrets
+              key: usage-db-port
+        - name: USAGE_DB_NAME
+          valueFrom:
+            secretKeyRef:
+              name: neuro-san-secrets
+              key: usage-db-name
         - name: AGENT_USAGE_LOGGER_METADATA
           value: "user_id request_id"
         - name: AGENT_USAGE_LOGGER
