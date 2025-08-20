@@ -1,110 +1,168 @@
 # Copyright (C) 2023-2025 Cognizant Digital Business, Evolutionary AI.
 # All Rights Reserved.
-# Issued under the Academic Public License.
 #
-# You can be released from the terms, and requirements of the Academic Public
-# License by purchasing a commercial license.
-# Purchase of a commercial license is mandatory for any use of the
-# neuro-san SDK Software in commercial settings.
+# Licensed under the Academic Public License.
 #
-# END COPYRIGHT
+# Usage logger plugin implementation for Aurora PostgreSQL (via RDS).
+# This is a pluggable logger that integrates with the Neuro-SAN UsageLogger interface.
+#
 
-import json
-from typing import Any
-from typing import Dict
-import boto3
-from botocore.exceptions import ClientError
+import os
+import logging
+from typing import Any, Dict, Optional
+from datetime import datetime
+from sqlalchemy import (
+    create_engine, Column, String, Integer, Numeric,
+    JSON, TIMESTAMP, ForeignKey
+)
+from sqlalchemy.orm import declarative_base, sessionmaker, Session
 from neuro_san.interfaces.usage_logger import UsageLogger
 
+# -------------------------------------------------------------------
+# Setup
+# -------------------------------------------------------------------
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
-class DemoUsageLogger(UsageLogger):
-    """
-      Implementation of the UsageLogger interface that merely spits out
-      usage stats to the logger.
-    """
-    async def log_usage(self, token_dict: Dict[str, Any], request_metadata: Dict[str, Any]):
-        """
-          Logs the token usage for external capture.
- 
-        :param token_dict: A dictionary that describes overall token usage for a completed request.
- 
-                For each class of LLM (more or less equivalent to an LLM provider), there will
-                be one key whose value is a dictionary with some other keys:
- 
-                Relevant keys include:
-                    "completion_tokens" - Integer number of tokens generated in response to LLM input
-                    "prompt_tokens" - Integer number of tokens that provide input to an LLM
-                    "time_taken_in_seconds" - Float describing the total wall-clock time taken for the request.
-                    "total_cost" -  An estimation of the cost in USD of the request.
-                                    This number is to be taken with a grain of salt, as these estimations
-                                    can come from model costs from libraries instead of directly from
-                                    providers.
-                    "total_tokens" - Total tokens used for the request.
- 
-                More keys can appear, but should not be counted on.
-                The ones listed above contain potentially salient information for usage logging purposes.
- 
-        :param request_metadata: A dictionary of filtered request metadata whose keys contain
-                identifying information for the usage log.
-        """
-        print("=== DemoUsageLogger.log_usage called ===")
-        print(f"Token usage: {token_dict}")
-        print(f"Request metadata: {request_metadata}")
+Base = declarative_base()
 
+
+# -------------------------------------------------------------------
+# Database Models
+# -------------------------------------------------------------------
+class User(Base):
+    __tablename__ = "users"
+
+    user_id = Column(String(64), primary_key=True)
+    username = Column(String(100))
+    email = Column(String(150))
+    created_at = Column(TIMESTAMP, default=datetime.utcnow)
+
+
+class Request(Base):
+    __tablename__ = "requests"
+
+    request_id = Column(String(64), primary_key=True)
+    user_id = Column(String(64), ForeignKey("users.user_id", ondelete="CASCADE"))
+    session_id = Column(String(64))
+    model_provider = Column(String(50))
+    model_name = Column(String(100))
+    prompt_tokens = Column(Integer)
+    completion_tokens = Column(Integer)
+    total_tokens = Column(Integer)
+    total_cost = Column(Numeric(10, 4))
+    time_taken_sec = Column(Numeric(10, 3))
+    created_at = Column(TIMESTAMP, default=datetime.utcnow)
+
+
+class UsageLog(Base):
+    __tablename__ = "usage_logs"
+
+    log_id = Column(Integer, primary_key=True, autoincrement=True)
+    request_id = Column(String(64), ForeignKey("requests.request_id", ondelete="CASCADE"))
+    raw_metadata = Column(JSON)
+    raw_usage = Column(JSON)
+    logged_at = Column(TIMESTAMP, default=datetime.utcnow)
+
+
+# -------------------------------------------------------------------
+# Postgres Usage Logger
+# -------------------------------------------------------------------
+class PostgresUsageLogger(UsageLogger):
+    """
+    A concrete implementation of UsageLogger that persists logs into
+    an Aurora PostgreSQL database using SQLAlchemy ORM.
+
+    Required environment variables:
+        USAGE_DB_USER     - Database username
+        USAGE_DB_PASS     - Database password
+        USAGE_DB_HOST     - RDS/Aurora host endpoint
+        USAGE_DB_PORT     - Database port (default: 5432)
+        USAGE_DB_NAME     - Database name (default: postgres)
+    """
+
+    def __init__(self, engine_url: Optional[str] = None) -> None:
+        if engine_url:
+            self.DATABASE_URL = engine_url
+        else:
+            self.DATABASE_URL = self._construct_db_url()
+
+        self.engine = create_engine(self.DATABASE_URL, echo=False, future=True)
+        self.SessionLocal = sessionmaker(bind=self.engine, expire_on_commit=False, class_=Session)
+
+        # ORM metadata syncs with tables (tables must already exist).
+        Base.metadata.create_all(self.engine)
+        logger.info("PostgresUsageLogger initialized and ready.")
+
+    @staticmethod
+    def _construct_db_url() -> str:
+        """
+        Constructs the database connection string from environment variables.
+        """
+        db_user = os.environ.get("USAGE_DB_USER")
+        db_pass = os.environ.get("USAGE_DB_PASS")
+        db_host = os.environ.get("USAGE_DB_HOST")
+        db_port = os.environ.get("USAGE_DB_PORT", "5432")
+        db_name = os.environ.get("USAGE_DB_NAME", "postgres")
+
+        if not all([db_user, db_pass, db_host, db_name]):
+            raise RuntimeError("Missing required DB environment variables for PostgresUsageLogger")
+
+        return f"postgresql+psycopg2://{db_user}:{db_pass}@{db_host}:{db_port}/{db_name}"
+
+    async def log_usage(self, token_dict: Dict[str, Any], request_metadata: Dict[str, Any]) -> None:
+        """
+        Persists usage details into PostgreSQL.
+
+        :param token_dict: Dictionary containing token usage stats.
+        :param request_metadata: Metadata describing request/session context.
+        """
+        session: Session = self.SessionLocal()
         try:
-            # Use environment variables for AWS credentials
-            import os
-            region = os.environ.get('AWS_REGION', 'us-west-2')
-            dynamodb = boto3.resource('dynamodb', region_name=region)
-            table_name = 'usage-logs'  # Change to your table name
-            table = dynamodb.Table(table_name)
-            
-            # Extract request_id and user_id from metadata
-            request_id = request_metadata.get('request_id', 'unknown')
-            user_id = request_metadata.get('user_id', 'unknown')
-            
-            # Extract token data from nested structure
-            total_tokens = 0
-            prompt_tokens = 0
-            completion_tokens = 0
-            total_cost = 0.0
-            time_taken = 0.0
-            
-            # token_dict often has nested provider data
-            for provider, data in token_dict.items():
-                if isinstance(data, dict):
-                    total_tokens += data.get('total_tokens', 0)
-                    prompt_tokens += data.get('prompt_tokens', 0)
-                    completion_tokens += data.get('completion_tokens', 0)
-                    total_cost += data.get('total_cost', 0.0)
-                    time_taken += data.get('time_taken_in_seconds', 0.0)
-            
-            # Prepare item for DynamoDB
-            item = {
-                'PK': user_id,
-                'SK': f"{user_id}#{request_id}",
-                'request_id': request_id,
-                'user_id': user_id,
-                'total_tokens': total_tokens,
-                'prompt_tokens': prompt_tokens,
-                'completion_tokens': completion_tokens,
-                'total_cost': str(total_cost),
-                'time_taken_in_seconds': str(time_taken),
-                'token_usage': json.dumps(token_dict),
-                'request_metadata': json.dumps(request_metadata)
-            }
-            
-            # Debug: Print item before writing
-            print(f"Writing item to DynamoDB: {item}")
-            
-            # Write to DynamoDB
-            response = table.put_item(Item=item)
-            
-            print(f"DynamoDB response: {response}")
-            print(f"Successfully logged usage for request {request_id}")
-            print("=== End DemoUsageLogger.log_usage ===")
-            
-        except ClientError as e:
-            print(f"Error logging to DynamoDB: {e}")
-        except Exception as e:
-            print(f"Unexpected error: {e}")
+            request_id = request_metadata.get("request_id")
+            user_id = request_metadata.get("user_id", "unknown")
+
+            # Ensure user exists
+            user = session.get(User, user_id)
+            if not user:
+                user = User(
+                    user_id=user_id,
+                    username=request_metadata.get("username"),
+                    email=request_metadata.get("email")
+                )
+                session.add(user)
+
+            # Persist request
+            request = Request(
+                request_id=request_id,
+                user_id=user_id,
+                session_id=request_metadata.get("session_id"),
+                model_provider=request_metadata.get("model_provider", "unknown"),
+                model_name=request_metadata.get("model_name", "unknown"),
+                prompt_tokens=token_dict.get("prompt_tokens", 0),
+                completion_tokens=token_dict.get("completion_tokens", 0),
+                total_tokens=token_dict.get("total_tokens", 0),
+                total_cost=token_dict.get("total_cost", 0.0),
+                time_taken_sec=token_dict.get("time_taken_in_seconds", 0.0),
+                created_at=datetime.utcnow(),
+            )
+            session.add(request)
+
+            # Persist usage log
+            usage_log = UsageLog(
+                request_id=request_id,
+                raw_metadata=request_metadata,
+                raw_usage=token_dict,
+                logged_at=datetime.utcnow(),
+            )
+            session.add(usage_log)
+
+            session.commit()
+            logger.info(f"Usage logged successfully [request_id={request_id}]")
+
+        except Exception as ex:
+            session.rollback()
+            logger.error(f" Failed to log usage: {ex}", exc_info=True)
+            raise
+        finally:
+            session.close()
