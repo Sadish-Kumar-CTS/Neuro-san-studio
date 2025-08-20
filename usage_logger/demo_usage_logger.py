@@ -19,7 +19,7 @@ from sqlalchemy.orm import declarative_base, sessionmaker, Session
 from neuro_san.interfaces.usage_logger import UsageLogger
 
 # -------------------------------------------------------------------
-# Setup
+# Setup Usage logger
 # -------------------------------------------------------------------
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
