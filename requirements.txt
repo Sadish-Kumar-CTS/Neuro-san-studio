@@ -2,6 +2,8 @@
 neuro-san==0.5.52
 neuro-san-web-client==0.1.12
 nsflow==0.5.16
+sqlalchemy>=2.0
+psycopg2-binary>=2.9
 
 # For the airline_policy demo and agentic rag, to extract text from documents
 pypdf>=5.4.0
@@ -17,4 +19,3 @@ aiofiles>=24.1.0
 langchain-mcp-adapters>=0.1.7
 
 # PostgreSQL adapter for usage logging
-# psycopg2-binary>=2.9 (already included above)
