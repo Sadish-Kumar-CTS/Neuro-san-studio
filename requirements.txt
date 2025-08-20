@@ -15,3 +15,6 @@ aiofiles>=24.1.0
 
 # For MCP servers and clients
 langchain-mcp-adapters>=0.1.7
+
+# PostgreSQL adapter for usage logging
+# psycopg2-binary>=2.9 (already included above)
