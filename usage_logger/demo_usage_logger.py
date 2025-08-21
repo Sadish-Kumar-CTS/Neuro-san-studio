@@ -31,7 +31,7 @@ Base = declarative_base()
 # Database Models
 # -------------------------------------------------------------------
 class User(Base):
-    __tablename__ = "users"
+    __tablename__ = "ns_users"
 
     user_id = Column(String(64), primary_key=True)
     username = Column(String(100))
@@ -40,10 +40,10 @@ class User(Base):
 
 
 class Request(Base):
-    __tablename__ = "requests"
+    __tablename__ = "ns_llm_requests"
 
     request_id = Column(String(64), primary_key=True)
-    user_id = Column(String(64), ForeignKey("users.user_id", ondelete="CASCADE"))
+    user_id = Column(String(64), ForeignKey("ns_users.user_id", ondelete="CASCADE"))
     session_id = Column(String(64))
     model_provider = Column(String(50))
     model_name = Column(String(100))
@@ -56,10 +56,10 @@ class Request(Base):
 
 
 class UsageLog(Base):
-    __tablename__ = "usage_logs"
+    __tablename__ = "ns_raw_usage_logs"
 
     log_id = Column(Integer, primary_key=True, autoincrement=True)
-    request_id = Column(String(64), ForeignKey("requests.request_id", ondelete="CASCADE"))
+    request_id = Column(String(64), ForeignKey("ns_llm_requests.request_id", ondelete="CASCADE"))
     raw_metadata = Column(JSON)
     raw_usage = Column(JSON)
     logged_at = Column(TIMESTAMP, default=datetime.utcnow)
