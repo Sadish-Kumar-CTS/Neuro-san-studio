@@ -49,6 +49,13 @@ jobs:
             echo "target_environment=dev" >> $GITHUB_OUTPUT
           fi
 
+      - name: Fetch usage_logger from Repo B
+        run: |
+          rm -rf usage_logger
+          git clone --depth 1 -b main https://github.com/Sadish-Kumar-CTS/usage_logger.git /tmp/repo-b
+          cp -r /tmp/repo-b/usage_logger ./usage_logger
+          rm -rf /tmp/repo-b    
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v3
         with:
