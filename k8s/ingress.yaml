@@ -4,7 +4,6 @@ metadata:
   name: neuro-san-studio-ingress
   namespace: argocd
   annotations:
-    external-dns.alpha.kubernetes.io/hostname: neuro-san.dev.evolution.ml
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}]'
@@ -15,7 +14,7 @@ metadata:
     alb.ingress.kubernetes.io/unhealthy-threshold-count: '2'
 spec:
   rules:
-  - host: neuro-san.dev.evolution.ml
+  - host: aea758d85dbba49d1a2b3e53d604a278-554826153.us-west-2.elb.amazonaws.com
     http:
       paths:
       - path: /
